@@ -254,7 +254,17 @@ function updateDashboard() {
     // Clear classes
     calorieFill.classList.remove('warning', 'exceeded');
     
+    // Output validation status flag to control the frontend color layout
     if (totalCalories > goalConfig.calories) {
+        appState.validationStatus = 'exceeded';
+    } else if (totalCalories >= goalConfig.calories * 0.85) {
+        appState.validationStatus = 'warning';
+    } else {
+        appState.validationStatus = 'safe';
+    }
+
+    // Apply color layout styling based on status flag
+    if (appState.validationStatus === 'exceeded') {
         calorieFill.classList.add('exceeded');
         
         // Trigger Warning Modal if not already shown
@@ -262,7 +272,7 @@ function updateDashboard() {
             document.getElementById('warning-modal').style.display = 'flex';
             appState.warningShownThisSession = true;
         }
-    } else if (totalCalories >= goalConfig.calories * 0.85) {
+    } else if (appState.validationStatus === 'warning') {
         calorieFill.classList.add('warning');
     }
 
@@ -468,7 +478,53 @@ function resetLoggingForm() {
     document.querySelector('.upload-placeholder').style.display = 'flex';
     document.getElementById('image-input').value = '';
     
+    // Restore simulate button
+    const simulateBtn = document.querySelector('button[onclick="simulateImageUpload()"]');
+    if (simulateBtn) simulateBtn.style.display = 'inline-block';
+    
     calculateScaledNutrients();
+}
+
+// Simulated Image Upload: Auto-fills standard mock values immediately
+function simulateImageUpload() {
+    const previewContainer = document.getElementById('preview-container');
+    const uploadPlaceholder = document.querySelector('.upload-placeholder');
+    const imagePreview = document.getElementById('image-preview');
+    const statusText = document.getElementById('prediction-status');
+    const simulateBtn = document.querySelector('button[onclick="simulateImageUpload()"]');
+    
+    uploadPlaceholder.style.display = 'none';
+    if (simulateBtn) simulateBtn.style.display = 'none';
+    previewContainer.style.display = 'block';
+    
+    // Nice placeholder image showing a cheeseburger
+    imagePreview.src = 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=300&auto=format&fit=crop';
+    
+    statusText.style.display = 'flex';
+    statusText.innerHTML = `<span class="spinner"></span> Simulating AI food scan...`;
+    
+    setTimeout(() => {
+        // Predefined mock values as required
+        const mockFood = {
+            name: "Cheeseburger Deluxe",
+            calories: 263,
+            protein: 14.0,
+            carbs: 28.0,
+            fats: 11.0,
+            confidence: 0.95
+        };
+        
+        document.getElementById('food-name').value = mockFood.name;
+        document.getElementById('portion-weight').value = 150;
+        document.getElementById('raw-calories').value = mockFood.calories;
+        document.getElementById('raw-protein').value = mockFood.protein;
+        document.getElementById('raw-carbs').value = mockFood.carbs;
+        document.getElementById('raw-fats').value = mockFood.fats;
+        
+        statusText.innerHTML = `✨ Mock Scan: Identified <strong>${mockFood.name}</strong> (95% confidence)`;
+        
+        calculateScaledNutrients();
+    }, 1000);
 }
 
 // Render logged meal entries in table
