@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env/
+
+# IDEs
+.idea/
+.vscode/
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Database (sqlite)
+# db.sqlite3 is kept if we want to share the preconfigured admin user, but generally good practice to ignore
+# For this prototype we can keep it or ignore it. Let's ignore it to keep repo clean.
+# db.sqlite3

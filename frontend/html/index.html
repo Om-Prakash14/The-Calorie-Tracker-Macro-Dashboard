@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitMacro AI - Calorie Tracker & Macro Dashboard</title>
+    <!-- Outfit Font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="auth-section" class="auth-container">
+        <div class="auth-card">
+            <div class="logo">
+                <span class="logo-icon">🔥</span>
+                <h2>FitMacro AI</h2>
+            </div>
+            <p class="auth-subtitle">Log in to track your calories, manage macros, and scanner foods with AI.</p>
+            <div id="login-form">
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Enter username" required />
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter password" required />
+                </div>
+                <button onclick="login()" class="btn-primary">Sign In</button>
+            </div>
+            <div id="error-message" class="error"></div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Application -->
+    <div id="dashboard-section" class="app-container" style="display: none;">
+        <!-- Top Navigation / Header -->
+        <header class="app-header">
+            <div class="brand">
+                <span class="logo-icon">🔥</span>
+                <h1>FitMacro AI</h1>
+            </div>
+            
+            <!-- Fitness Goal Toggle -->
+            <div class="goal-toggle-container">
+                <span class="toggle-label">Fitness Goal:</span>
+                <div class="goal-toggle">
+                    <button class="goal-btn active" onclick="setGoal('weight-loss')" id="goal-weight-loss">Weight Loss</button>
+                    <button class="goal-btn" onclick="setGoal('maintenance')" id="goal-maintenance">Maintenance</button>
+                    <button class="goal-btn" onclick="setGoal('muscle-gain')" id="goal-muscle-gain">Muscle Gain</button>
+                </div>
+            </div>
+
+            <div class="user-menu">
+                <span class="user-greeting">Hi, <strong id="display-username">User</strong></span>
+                <button onclick="logout()" class="btn-secondary">Logout</button>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            <!-- Left Side: Visual Dashboard -->
+            <section class="dashboard-panel glass-card">
+                <h2 class="section-title">Daily Progress</h2>
+                
+                <!-- Main Calorie Budget Progress -->
+                <div class="calorie-budget-card">
+                    <div class="calorie-info">
+                        <div class="metric">
+                            <span class="metric-value" id="current-calories">0</span>
+                            <span class="metric-unit">kcal logged</span>
+                        </div>
+                        <div class="divider">/</div>
+                        <div class="metric target">
+                            <span class="metric-value" id="target-calories">2000</span>
+                            <span class="metric-unit">kcal budget</span>
+                        </div>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="calorie-progress-fill" style="width: 0%"></div>
+                    </div>
+                    <div class="calorie-remaining" id="calorie-remaining-text">2000 kcal remaining</div>
+                </div>
+
+                <!-- Macronutrient Progress Bars -->
+                <div class="macros-dashboard">
+                    <h3>Macronutrient Breakdown</h3>
+                    
+                    <!-- Protein -->
+                    <div class="macro-progress-item">
+                        <div class="macro-details">
+                            <span class="macro-name"><span class="bullet protein-bullet"></span>Protein</span>
+                            <span class="macro-stats"><strong id="current-protein">0</strong> / <span id="target-protein">120</span>g</span>
+                        </div>
+                        <div class="macro-bar-container">
+                            <div class="macro-bar-fill protein-fill" id="protein-progress-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Carbs -->
+                    <div class="macro-progress-item">
+                        <div class="macro-details">
+                            <span class="macro-name"><span class="bullet carbs-bullet"></span>Carbohydrates</span>
+                            <span class="macro-stats"><strong id="current-carbs">0</strong> / <span id="target-carbs">160</span>g</span>
+                        </div>
+                        <div class="macro-bar-container">
+                            <div class="macro-bar-fill carbs-fill" id="carbs-progress-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Fats -->
+                    <div class="macro-progress-item">
+                        <div class="macro-details">
+                            <span class="macro-name"><span class="bullet fats-bullet"></span>Fats</span>
+                            <span class="macro-stats"><strong id="current-fats">0</strong> / <span id="target-fats">53</span>g</span>
+                        </div>
+                        <div class="macro-bar-container">
+                            <div class="macro-bar-fill fats-fill" id="fats-progress-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Side: Logging Panel -->
+            <section class="logging-panel glass-card">
+                <h2 class="section-title">Log Food Item</h2>
+                
+                <div class="scanner-section">
+                    <p class="panel-subtitle">Upload a photo to detect food using EfficientNet AI scanner, or log manually below.</p>
+                    <div class="image-upload-zone" id="image-upload-zone">
+                        <input type="file" id="image-input" accept="image/*" style="display: none;" onchange="handleImageUpload(event)" />
+                        <div class="upload-placeholder" onclick="document.getElementById('image-input').click()">
+                            <span class="upload-icon">📸</span>
+                            <span class="upload-text">AI Food Photo Scanner</span>
+                            <span class="upload-subtext">Click to upload food photo</span>
+                        </div>
+                        <div class="preview-container" id="preview-container" style="display: none;">
+                            <img id="image-preview" src="#" alt="Food Preview" />
+                            <div class="prediction-status" id="prediction-status">
+                                <span class="spinner"></span> Analyzing image...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="manual-log-form">
+                    <div class="input-row">
+                        <div class="input-group flex-2">
+                            <label for="food-name">Food Name</label>
+                            <input type="text" id="food-name" placeholder="Search or type food..." oninput="searchFoodDatabase(this.value)" autocomplete="off" />
+                            <div id="autocomplete-list" class="autocomplete-items" style="display: none;"></div>
+                        </div>
+                        <div class="input-group flex-1">
+                            <label for="portion-weight">Portion (g)</label>
+                            <input type="number" id="portion-weight" value="100" min="1" oninput="calculateScaledNutrients()" />
+                        </div>
+                    </div>
+
+                    <!-- Hidden default/raw values per 100g (for scaling) -->
+                    <input type="hidden" id="raw-calories" value="0" />
+                    <input type="hidden" id="raw-protein" value="0" />
+                    <input type="hidden" id="raw-carbs" value="0" />
+                    <input type="hidden" id="raw-fats" value="0" />
+
+                    <!-- Live Calculated Nutrients Preview -->
+                    <div class="nutrient-preview-box">
+                        <h4>Nutrients Preview <span class="portion-label" id="preview-portion-text">(100g)</span></h4>
+                        <div class="nutrient-badges">
+                            <div class="badge">
+                                <span class="badge-num" id="preview-calories">0</span>
+                                <span class="badge-lbl">Calories</span>
+                            </div>
+                            <div class="badge protein-badge">
+                                <span class="badge-num" id="preview-protein">0g</span>
+                                <span class="badge-lbl">Protein</span>
+                            </div>
+                            <div class="badge carbs-badge">
+                                <span class="badge-num" id="preview-carbs">0g</span>
+                                <span class="badge-lbl">Carbs</span>
+                            </div>
+                            <div class="badge fats-badge">
+                                <span class="badge-num" id="preview-fats">0g</span>
+                                <span class="badge-lbl">Fats</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="logMeal()" class="btn-primary" id="log-meal-btn">Log Meal</button>
+                </div>
+            </section>
+        </div>
+
+        <!-- Bottom Section: Daily History -->
+        <section class="history-panel glass-card">
+            <div class="history-header">
+                <h2 class="section-title">Today's Logged Meals</h2>
+                <button onclick="clearHistory()" class="btn-text-danger">Clear All</button>
+            </div>
+            
+            <div class="table-container">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Food Item</th>
+                            <th>Portion</th>
+                            <th>Calories</th>
+                            <th>Protein</th>
+                            <th>Carbs</th>
+                            <th>Fats</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="meal-history-list">
+                        <!-- Meal history entries injected here -->
+                        <tr class="empty-state" id="empty-history-row">
+                            <td colspan="8">No meals logged for today. Start tracking your fitness journey!</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Daily Budget Exceeded Warning Modal -->
+    <div id="warning-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card">
+            <span class="warning-icon">⚠️</span>
+            <h2>Daily Budget Exceeded!</h2>
+            <p>You have gone over your calorie limit for today. Watch your portions or adjust your goal!</p>
+            <button onclick="closeModal()" class="btn-primary">Got it</button>
+        </div>
+    </div>
+
+    <script src="../api.js"></script>
+    <script>
+        // Inline scripts for UI routing and login binding
+        function updateUI() {
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                document.getElementById('auth-section').style.display = 'none';
+                document.getElementById('dashboard-section').style.display = 'block';
+                document.getElementById('display-username').innerText = localStorage.getItem('username') || 'User';
+                loadDashboardData();
+            } else {
+                document.getElementById('auth-section').style.display = 'flex';
+                document.getElementById('dashboard-section').style.display = 'none';
+            }
+        }
+        
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.innerText = '';
+            
+            try {
+                const response = await loginApi(username, password);
+                if (response.access) {
+                    localStorage.setItem('username', username);
+                    updateUI();
+                } else {
+                    errorDiv.innerText = 'Login failed. Please check credentials.';
+                }
+            } catch (error) {
+                errorDiv.innerText = 'Error connecting to auth service.';
+            }
+        }
+        
+        function logout() {
+            logoutApi();
+            updateUI();
+        }
+        
+        // Initial setup
+        updateUI();
+    </script>
+</body>
+</html>
