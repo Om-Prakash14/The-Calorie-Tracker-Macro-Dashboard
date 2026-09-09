@@ -33,7 +33,8 @@ FOOD_DATABASE = [
 def initialize_state():
     st.session_state.setdefault("goal", "Weight loss")
     st.session_state.setdefault("meals", [])
-    st.session_state.setdefault("selected_food", FOOD_DATABASE[0])
+    st.session_state.setdefault("food_catalog", FOOD_DATABASE.copy())
+    st.session_state.setdefault("food_selector", FOOD_DATABASE[0]["name"])
     st.session_state.setdefault("scan_result", None)
 
 
@@ -62,6 +63,31 @@ def scan_image(uploaded_file):
         return None, str(error)
 
 
+def select_scanned_food(result):
+    catalog = st.session_state.food_catalog
+    predicted_name = result["name"].strip()
+    matching_food = next(
+        (
+            food
+            for food in catalog
+            if food["name"].casefold() == predicted_name.casefold()
+            or food["name"].casefold() in predicted_name.casefold()
+            or predicted_name.casefold() in food["name"].casefold()
+        ),
+        None,
+    )
+    if matching_food is None:
+        matching_food = {
+            "name": predicted_name,
+            "calories": result["calories"],
+            "protein": result["protein"],
+            "carbs": result["carbs"],
+            "fats": result["fats"],
+        }
+        catalog.append(matching_food)
+    st.session_state.food_selector = matching_food["name"]
+
+
 initialize_state()
 
 st.markdown(
@@ -85,9 +111,13 @@ with st.sidebar:
     goal = GOALS[st.session_state.goal]
     st.divider()
     st.subheader("Add a meal")
-    food_names = [food["name"] for food in FOOD_DATABASE]
-    selected_name = st.selectbox("Food", food_names)
-    selected_food = next(food for food in FOOD_DATABASE if food["name"] == selected_name)
+    food_names = [food["name"] for food in st.session_state.food_catalog]
+    st.selectbox("Food", food_names, key="food_selector")
+    selected_food = next(
+        food
+        for food in st.session_state.food_catalog
+        if food["name"] == st.session_state.food_selector
+    )
     portion = st.number_input("Portion (g)", min_value=1, value=100, step=10)
     nutrients = scaled_nutrients(selected_food, portion)
     st.caption(
@@ -113,7 +143,9 @@ with st.sidebar:
             result, error = scan_image(uploaded_file)
         if result:
             st.session_state.scan_result = result
+            select_scanned_food(result)
             st.success(f"Identified {result['name']}")
+            st.rerun()
         else:
             st.error(f"Scanner unavailable: {error}")
     if st.session_state.scan_result:
