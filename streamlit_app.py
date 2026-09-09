@@ -100,6 +100,23 @@ st.markdown(
     <style>
     .block-container { max-width: 1200px; padding-top: 2rem; }
     [data-testid="stMetricValue"] { color: #f97316; }
+    .calorie-progress-track {
+        width: 100%;
+        height: 18px;
+        margin: 0.75rem 0 0.35rem;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #252936;
+    }
+    .calorie-progress-fill {
+        height: 100%;
+        border-radius: inherit;
+        transition: width 220ms ease, background-color 220ms ease;
+    }
+    .calorie-progress-label {
+        color: #a8acb8;
+        font-size: 0.9rem;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -161,7 +178,10 @@ with st.sidebar:
         )
 
 current = totals()
-calorie_ratio = min(current["calories"] / goal["calories"], 1.0) if goal["calories"] else 0
+calorie_ratio = current["calories"] / goal["calories"] if goal["calories"] else 0
+calorie_percentage = min(calorie_ratio * 100, 100)
+calorie_over_budget = current["calories"] > goal["calories"]
+calorie_color = "#dc143c" if calorie_over_budget else "#22c55e"
 
 metric_columns = st.columns(4)
 metric_columns[0].metric("Calories", f"{current['calories']:.0f} kcal", f"{goal['calories']} kcal goal")
@@ -169,9 +189,25 @@ metric_columns[1].metric("Protein", f"{current['protein']:.1f} g", f"{goal['prot
 metric_columns[2].metric("Carbs", f"{current['carbs']:.1f} g", f"{goal['carbs']} g goal")
 metric_columns[3].metric("Fats", f"{current['fats']:.1f} g", f"{goal['fats']} g goal")
 
-st.progress(calorie_ratio, text=f"{current['calories']:.0f} of {goal['calories']} kcal logged")
-if current["calories"] > goal["calories"]:
-    st.warning(f"You are {current['calories'] - goal['calories']:.0f} kcal over today's budget.")
+st.markdown(
+    f"""
+    <div class="calorie-progress-track" role="progressbar"
+         aria-valuenow="{current['calories']:.0f}"
+         aria-valuemin="0" aria-valuemax="{goal['calories']}">
+        <div class="calorie-progress-fill"
+             style="width: {calorie_percentage:.1f}%; background-color: {calorie_color};"></div>
+    </div>
+    <div class="calorie-progress-label">
+        {current['calories']:.0f} of {goal['calories']} kcal logged
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+if calorie_over_budget:
+    st.error(
+        f"Daily Budget Exceeded! You are "
+        f"{current['calories'] - goal['calories']:.0f} kcal over today's budget."
+    )
 else:
     st.success(f"{goal['calories'] - current['calories']:.0f} kcal remaining today.")
 
