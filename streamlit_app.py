@@ -35,6 +35,7 @@ def initialize_state():
     st.session_state.setdefault("meals", [])
     st.session_state.setdefault("food_catalog", FOOD_DATABASE.copy())
     st.session_state.setdefault("food_selector", FOOD_DATABASE[0]["name"])
+    st.session_state.setdefault("pending_food_selector", None)
     st.session_state.setdefault("scan_result", None)
 
 
@@ -85,10 +86,14 @@ def select_scanned_food(result):
             "fats": result["fats"],
         }
         catalog.append(matching_food)
-    st.session_state.food_selector = matching_food["name"]
+    st.session_state.pending_food_selector = matching_food["name"]
 
 
 initialize_state()
+
+if st.session_state.pending_food_selector:
+    st.session_state.food_selector = st.session_state.pending_food_selector
+    st.session_state.pending_food_selector = None
 
 st.markdown(
     """
